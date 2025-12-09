@@ -117,7 +117,7 @@ export default function PanduanAdmin() {
           </div>
           {previewUrl && <img src={previewUrl} className="h-32 w-full object-cover rounded-lg border mt-2" />}
 
-          <button type="submit" disabled={uploading} className="bg-blue-600 text-white px-5 py-3 rounded-lg w-full font-semibold">
+          <button type="submit" disabled={uploading} className="bg-blue-600 text-black px-5 py-3 rounded-lg w-full font-semibold">
             {uploading ? "Mengupload..." : "Simpan Panduan"}
           </button>
         </form>

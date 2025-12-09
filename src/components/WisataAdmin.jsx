@@ -105,7 +105,7 @@ export default function PotensiAdmin() {
 
           <textarea placeholder="Deskripsi Wisata" className="border p-3 rounded-lg md:col-span-2" rows="3" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
 
-          <button type="submit" disabled={uploading} className="bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-lg md:col-span-2 font-bold flex justify-center gap-2">
+          <button type="submit" disabled={uploading} className="bg-indigo-600 hover:bg-indigo-700 text-black py-3 rounded-lg md:col-span-2 font-bold flex justify-center gap-2">
             {uploading ? <Loader2 className="animate-spin" /> : "Simpan Data Wisata"}
           </button>
         </form>

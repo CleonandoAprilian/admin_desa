@@ -120,9 +120,11 @@ export default function BeritaAdmin() {
             {previewUrl && <img src={previewUrl} alt="Preview" className="mt-4 h-32 w-full object-cover rounded-lg border shadow-sm" />}
           </div>
 
-          <button type="submit" disabled={uploading} className="bg-blue-600 text-white px-5 py-3 rounded-lg flex items-center justify-center gap-2 transition hover:bg-blue-700 w-full">
+          <button type="submit" disabled={uploading} className="bg-blue-600 text-black px-5 py-3 rounded-lg flex items-center justify-center gap-2 transition hover:bg-blue-700 w-full disabled:bg-gray-400 disabled:cursor-not-allowed">
             {uploading ? (
-              <Loader2 className="animate-spin" />
+              <>
+                <Loader2 className="animate-spin" /> Mengupload...
+              </>
             ) : (
               <>
                 <Plus size={16} /> Simpan Berita

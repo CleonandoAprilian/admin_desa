@@ -1,8 +1,18 @@
-import { Outlet, Link, useLocation } from "react-router-dom";
+import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import { Users, Newspaper, ShoppingBag, Map, BookOpen, LogOut, LayoutDashboard } from "lucide-react";
+import { supabase } from "../SupabaseClients";
 
 export default function AdminLayout() {
   const location = useLocation();
+  const navigate = useNavigate(); // 3. Inisialisasi hook navigasi
+
+  const handleLogout = async () => {
+    // A. Hapus sesi login di Supabase (Penting agar tidak bisa back)
+    await supabase.auth.signOut();
+
+    // B. Pindahkan user ke halaman login
+    navigate("/login");
+  };
 
   // Menu Navigasi
   const menus = [
@@ -40,7 +50,10 @@ export default function AdminLayout() {
         </nav>
 
         <div className="p-4 border-t border-slate-700">
-          <button className="flex items-center gap-3 w-full px-4 py-3 text-red-400 hover:bg-slate-800 rounded-lg transition-colors">
+          <button
+            onClick={handleLogout} // 4. Panggil fungsi di sini
+            className="flex items-center gap-3 w-full px-4 py-3 text-red-400 hover:bg-slate-800 rounded-lg transition-colors"
+          >
             <LogOut size={20} />
             <span className="font-medium">Logout</span>
           </button>
