@@ -1,31 +1,46 @@
 import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+
+// 1. Import Komponen Keamanan & Layout
+// Pastikan file-file ini ada di folder yang sesuai
+import PrivateRoute from "./components/PrivateRoute";
+import Login from "./components/Login";
 import AdminLayout from "./components/AdminLayout";
-import AdminDashboard from "./components/AdminDashboard"; // Asumsi ini CRUD Penduduk kamu
+
+// 2. Import Halaman Admin (CRUD)
+import AdminDashboard from "./components/AdminDashboard"; // Dashboard Penduduk (File lama Anda)
 import BeritaAdmin from "./components/BeritaAdmin";
 import ProdukAdmin from "./components/ProdukAdmin";
-import PotensiAdmin from "./components/WisataAdmin";
+import WisataAdmin from "./components/WisataAdmin";
 import PanduanAdmin from "./components/PanduanAdmin";
+
 import "./App.css";
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Redirect halaman awal ke dashboard admin */}
-        <Route path="/" element={<Navigate to="/admin/penduduk" replace />} />
+        {/* --- 1. ROUTE PUBLIK (Bisa diakses tanpa login) --- */}
+        <Route path="/login" element={<Login />} />
 
-        {/* Grouping Route Admin dengan Layout */}
-        <Route path="/admin" element={<AdminLayout />}>
-          {/* Halaman CRUD Penduduk (AdminDashboard lama kamu) */}
-          <Route path="penduduk" element={<AdminDashboard />} />
+        {/* --- 2. ROUTE ADMIN (Hanya bisa diakses jika login) --- */}
+        <Route element={<PrivateRoute />}>
+          <Route path="/admin" element={<AdminLayout />}>
+            {/* Redirect: Buka /admin langsung masuk ke /admin/penduduk */}
+            <Route index element={<Navigate to="/admin/penduduk" replace />} />
 
-          {/* Halaman-halaman baru */}
-          <Route path="berita" element={<BeritaAdmin />} />
-          <Route path="produk" element={<ProdukAdmin />} />
-          <Route path="wisata" element={<PotensiAdmin />} />
-          <Route path="panduan" element={<PanduanAdmin />} />
+            {/* Sub-menu Admin */}
+            <Route path="penduduk" element={<AdminDashboard />} />
+            <Route path="berita" element={<BeritaAdmin />} />
+            <Route path="produk" element={<ProdukAdmin />} />
+            <Route path="wisata" element={<WisataAdmin />} />
+            <Route path="panduan" element={<PanduanAdmin />} />
+          </Route>
         </Route>
+
+        {/* --- 3. FALLBACK (Jika halaman tidak ditemukan / Root) --- */}
+        <Route path="/" element={<Navigate to="/login" replace />} />
+        <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </BrowserRouter>
   );

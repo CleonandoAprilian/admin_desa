@@ -1,10 +1,14 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../SupabaseClients";
-import { Trash, Plus, Image as ImageIcon } from "lucide-react";
+import { Trash, Plus, Image as ImageIcon, Loader2 } from "lucide-react";
 
 export default function BeritaAdmin() {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [uploading, setUploading] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState("");
+
   const [form, setForm] = useState({
     title: "",
     description: "",
@@ -12,11 +16,9 @@ export default function BeritaAdmin() {
     image_url: "",
   });
 
-  // ================= FETCH DATA =================
   const fetchData = async () => {
     setLoading(true);
     const { data } = await supabase.from("berita").select("*").order("created_at", { ascending: false });
-
     setData(data || []);
     setLoading(false);
   };
@@ -25,25 +27,62 @@ export default function BeritaAdmin() {
     fetchData();
   }, []);
 
-  // ================= SUBMIT =================
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setSelectedFile(file);
+      setPreviewUrl(URL.createObjectURL(file));
+    }
+  };
+
+  const uploadImage = async (file) => {
+    try {
+      const fileName = `${Date.now()}-${file.name.replace(/\s/g, "-")}`;
+      const { error } = await supabase.storage.from("images").upload(fileName, file);
+      if (error) throw error;
+
+      const { data } = supabase.storage.from("images").getPublicUrl(fileName);
+      return data.publicUrl;
+    } catch (error) {
+      console.error("Upload Error:", error);
+      throw new Error("Gagal mengupload gambar");
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setUploading(true);
+
     try {
-      const { error } = await supabase.from("berita").insert([form]);
+      let finalImageUrl = form.image_url;
+      if (selectedFile) {
+        finalImageUrl = await uploadImage(selectedFile);
+      }
+
+      // ✅ MENAMBAHKAN views: 0 SECARA OTOMATIS
+      const payload = {
+        ...form,
+        image_url: finalImageUrl,
+        views: 0,
+      };
+
+      const { error } = await supabase.from("berita").insert([payload]);
       if (error) throw error;
 
       alert("✅ Berita berhasil disimpan!");
       setForm({ title: "", description: "", content: "", image_url: "" });
+      setSelectedFile(null);
+      setPreviewUrl("");
       fetchData();
     } catch (err) {
       alert("❌ Gagal menyimpan: " + err.message);
+    } finally {
+      setUploading(false);
     }
   };
 
-  // ================= DELETE =================
   const handleDelete = async (id) => {
     if (!confirm("Yakin ingin menghapus berita ini?")) return;
-
     await supabase.from("berita").delete().eq("id", id);
     fetchData();
   };
@@ -52,101 +91,74 @@ export default function BeritaAdmin() {
     <div className="p-8 min-h-screen bg-gray-100">
       <h1 className="text-3xl font-bold mb-8 text-gray-800">📰 Kelola Berita</h1>
 
-      {/* FORM INPUT */}
       <div className="bg-white p-8 rounded-2xl shadow-lg mb-10 max-w-3xl">
         <h2 className="font-semibold text-lg mb-6">Tambah Berita Baru</h2>
-
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
             <label className="text-sm font-semibold text-gray-600">Judul</label>
-            <input
-              type="text"
-              placeholder="Masukkan judul berita"
-              className="mt-1 w-full border rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500"
-              required
-              value={form.title}
-              onChange={(e) => setForm({ ...form, title: e.target.value })}
-            />
+            <input type="text" className="mt-1 w-full border rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500" required value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
           </div>
 
           <div>
             <label className="text-sm font-semibold text-gray-600">Deskripsi Singkat</label>
-            <textarea
-              placeholder="Deskripsi singkat berita"
-              className="mt-1 w-full border rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500"
-              rows="2"
-              required
-              value={form.description}
-              onChange={(e) => setForm({ ...form, description: e.target.value })}
-            />
+            <textarea className="mt-1 w-full border rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500" rows="2" required value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
           </div>
 
           <div>
             <label className="text-sm font-semibold text-gray-600">Isi Berita</label>
-            <textarea
-              placeholder="Isi lengkap berita..."
-              className="mt-1 w-full border rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500"
-              rows="5"
-              value={form.content}
-              onChange={(e) => setForm({ ...form, content: e.target.value })}
-            />
+            <textarea className="mt-1 w-full border rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500" rows="5" value={form.content} onChange={(e) => setForm({ ...form, content: e.target.value })} />
           </div>
 
+          {/* INPUT GAMBAR */}
           <div>
-            <label className="text-sm font-semibold text-gray-600 mb-1 block">URL Gambar</label>
-
-            <div className="relative">
-              <ImageIcon size={18} className="absolute left-3 top-3 text-gray-400" />
-
-              <input
-                type="url"
-                placeholder="https://example.com/gambar.jpg"
-                className="w-full border rounded-lg pl-10 p-3 outline-none focus:ring-2 focus:ring-blue-500"
-                value={form.image_url}
-                onChange={(e) => setForm({ ...form, image_url: e.target.value })}
-              />
+            <label className="text-sm font-semibold text-gray-600 mb-1 block">Gambar Berita</label>
+            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 flex flex-col items-center justify-center text-center hover:bg-gray-50 transition cursor-pointer relative">
+              <input type="file" accept="image/*" onChange={handleFileChange} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+              <ImageIcon size={32} className="text-gray-400 mb-2" />
+              <p className="text-sm text-gray-500">{selectedFile ? selectedFile.name : "Klik untuk upload gambar"}</p>
             </div>
-
-            {/* Preview */}
-            {form.image_url && <img src={form.image_url} alt="Preview" className="mt-3 h-32 rounded-lg object-cover border" />}
+            {previewUrl && <img src={previewUrl} alt="Preview" className="mt-4 h-32 w-full object-cover rounded-lg border shadow-sm" />}
           </div>
 
-          <button type="submit" className="bg-blue-600 text-black px-5 py-3 rounded-lg flex items-center gap-2 transition">
-            <Plus size={16} />
-            Simpan Berita
+          <button type="submit" disabled={uploading} className="bg-blue-600 text-white px-5 py-3 rounded-lg flex items-center justify-center gap-2 transition hover:bg-blue-700 w-full">
+            {uploading ? (
+              <Loader2 className="animate-spin" />
+            ) : (
+              <>
+                <Plus size={16} /> Simpan Berita
+              </>
+            )}
           </button>
         </form>
       </div>
 
-      {/* TABLE DATA */}
       <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
         <table className="w-full">
           <thead className="bg-gray-50 border-b text-gray-600 text-sm uppercase">
             <tr>
               <th className="p-4">Gambar</th>
               <th className="p-4">Judul</th>
-              <th className="p-4">Tanggal</th>
+              <th className="p-4 text-center">Views</th>
               <th className="p-4 text-center">Aksi</th>
             </tr>
           </thead>
-
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan="4" className="text-center p-6 text-gray-500">
-                  Loading data...
+                <td colSpan="4" className="text-center p-6">
+                  Loading...
                 </td>
               </tr>
             ) : (
               data.map((item) => (
-                <tr key={item.id} className="border-b hover:bg-gray-50 transition">
+                <tr key={item.id} className="border-b hover:bg-gray-50">
                   <td className="p-4">
-                    <img src={item.image_url} alt="" className="w-14 h-14 rounded-lg object-cover" />
+                    <img src={item.image_url || "https://placehold.co/100"} className="w-14 h-14 rounded-lg object-cover" />
                   </td>
-                  <td className="p-4 font-medium text-gray-800">{item.title}</td>
-                  <td className="p-4 text-sm text-gray-500">{new Date(item.created_at).toLocaleDateString()}</td>
+                  <td className="p-4 font-medium">{item.title}</td>
+                  <td className="p-4 text-center text-gray-500">{item.views || 0}</td>
                   <td className="p-4 text-center">
-                    <button onClick={() => handleDelete(item.id)} className="text-red-600 hover:bg-red-100 p-2 rounded-lg transition">
+                    <button onClick={() => handleDelete(item.id)} className="text-red-600 bg-red-50 p-2 rounded-lg">
                       <Trash size={18} />
                     </button>
                   </td>
