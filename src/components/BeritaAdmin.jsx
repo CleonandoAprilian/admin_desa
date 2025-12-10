@@ -91,7 +91,7 @@ export default function BeritaAdmin() {
     <div className="p-8 min-h-screen bg-gray-100">
       <h1 className="text-3xl font-bold mb-8 text-gray-800">📰 Kelola Berita</h1>
 
-      <div className="bg-white p-8 rounded-2xl shadow-lg mb-10 max-w-3xl">
+      <div className="bg-white p-8 rounded-2xl shadow-lg mb-10 ">
         <h2 className="font-semibold text-lg mb-6">Tambah Berita Baru</h2>
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
@@ -120,7 +120,7 @@ export default function BeritaAdmin() {
             {previewUrl && <img src={previewUrl} alt="Preview" className="mt-4 h-32 w-full object-cover rounded-lg border shadow-sm" />}
           </div>
 
-          <button type="submit" disabled={uploading} className="bg-blue-600 text-black px-5 py-3 rounded-lg flex items-center justify-center gap-2 transition hover:bg-blue-700 w-full disabled:bg-gray-400 disabled:cursor-not-allowed">
+          <button type="submit" disabled={uploading} className="bg-blue-600 text-white px-5 py-3 rounded-lg flex items-center justify-center gap-2 transition hover:bg-blue-700 w-full disabled:bg-gray-400 disabled:cursor-not-allowed">
             {uploading ? (
               <>
                 <Loader2 className="animate-spin" /> Mengupload...

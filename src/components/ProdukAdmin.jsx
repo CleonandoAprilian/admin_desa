@@ -35,6 +35,7 @@ export default function ProdukAdmin() {
   };
 
   const uploadImage = async (file) => {
+    // eslint-disable-next-line no-useless-catch
     try {
       const fileName = `produk-${Date.now()}-${file.name.replace(/\s/g, "-")}`;
       const { error } = await supabase.storage.from("images").upload(fileName, file);
@@ -106,7 +107,7 @@ export default function ProdukAdmin() {
 
           <textarea className="md:col-span-2 border p-3 rounded-lg" rows="3" placeholder="Deskripsi Produk" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
 
-          <button type="submit" disabled={uploading} className="bg-green-600 hover:bg-green-700 text-black py-3 rounded-lg md:col-span-2 font-bold transition flex justify-center">
+          <button type="submit" disabled={uploading} className="bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg md:col-span-2 font-bold transition flex justify-center">
             {uploading ? <Loader2 className="animate-spin" /> : "Simpan Produk"}
           </button>
         </form>

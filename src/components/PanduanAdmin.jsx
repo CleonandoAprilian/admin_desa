@@ -95,7 +95,7 @@ export default function PanduanAdmin() {
     <div className="p-8 min-h-screen bg-gray-100">
       <h1 className="text-3xl font-bold mb-8 text-gray-800">📘 Kelola Panduan Layanan</h1>
 
-      <div className="bg-white p-8 rounded-2xl shadow-lg mb-10 max-w-4xl">
+      <div className="bg-white p-8 rounded-2xl shadow-lg mb-10 ">
         <h2 className="font-semibold text-lg mb-6">Tambah Panduan Baru</h2>
         <form onSubmit={handleSubmit} className="space-y-5">
           <input type="text" placeholder="Judul Panduan" className="w-full border rounded-lg p-3" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} required />
@@ -117,7 +117,7 @@ export default function PanduanAdmin() {
           </div>
           {previewUrl && <img src={previewUrl} className="h-32 w-full object-cover rounded-lg border mt-2" />}
 
-          <button type="submit" disabled={uploading} className="bg-blue-600 text-black px-5 py-3 rounded-lg w-full font-semibold">
+          <button type="submit" disabled={uploading} className="bg-blue-600 text-white px-5 py-3 rounded-lg w-full font-semibold">
             {uploading ? "Mengupload..." : "Simpan Panduan"}
           </button>
         </form>

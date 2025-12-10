@@ -81,7 +81,7 @@ export default function PotensiAdmin() {
   };
 
   return (
-    <div>
+    <div className="p-8 min-h-screen bg-gray-100">
       <h1 className="text-3xl font-bold text-gray-800 mb-8">Potensi Wisata Desa</h1>
 
       <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 mb-8">
@@ -105,7 +105,7 @@ export default function PotensiAdmin() {
 
           <textarea placeholder="Deskripsi Wisata" className="border p-3 rounded-lg md:col-span-2" rows="3" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
 
-          <button type="submit" disabled={uploading} className="bg-indigo-600 hover:bg-indigo-700 text-black py-3 rounded-lg md:col-span-2 font-bold flex justify-center gap-2">
+          <button type="submit" disabled={uploading} className="bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-lg md:col-span-2 font-bold flex justify-center gap-2">
             {uploading ? <Loader2 className="animate-spin" /> : "Simpan Data Wisata"}
           </button>
         </form>

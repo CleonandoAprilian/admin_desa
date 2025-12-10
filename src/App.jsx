@@ -14,7 +14,7 @@ import ProdukAdmin from "./components/ProdukAdmin";
 import WisataAdmin from "./components/WisataAdmin";
 import PanduanAdmin from "./components/PanduanAdmin";
 
-import "./App.css";
+import "./index.css";
 
 function App() {
   return (

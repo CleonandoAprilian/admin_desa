@@ -82,7 +82,7 @@ export default function Login() {
             </div>
 
             {/* Button */}
-            <button type="submit" disabled={loading} className="w-full bg-blue-600 hover:bg-blue-700 text-black font-bold py-3 rounded-lg flex items-center justify-center gap-2 transition-all disabled:opacity-50">
+            <button type="submit" disabled={loading} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg flex items-center justify-center gap-2 transition-all disabled:opacity-50">
               {loading ? (
                 <>
                   {" "}
