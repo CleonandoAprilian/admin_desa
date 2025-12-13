@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { supabase } from "../SupabaseClients";
-import { Plus, Edit, Trash, Loader2, XCircle } from "lucide-react"; // Import ikon tambahan
+import { Plus, Edit, Trash, Loader2, XCircle, Download, Users } from "lucide-react";
+import * as XLSX from 'xlsx';
 
 function AdminDashboard() {
   const [penduduk, setPenduduk] = useState([]);
@@ -73,7 +74,6 @@ function AdminDashboard() {
 
     if (isEditing && currentData) {
       // UPDATE
-      // Hapus NIK dari payload jika NIK tidak boleh diubah
       delete dataToSubmit.nik;
       const { error } = await supabase.from("penduduk").update(dataToSubmit).eq("id", currentData.id);
 
@@ -118,7 +118,6 @@ function AdminDashboard() {
   const handleEditClick = (item) => {
     setIsEditing(true);
     setCurrentData(item);
-    // Isi form dengan data item yang akan diedit
     setFormInput({
       nik: item.nik || "",
       nama_lengkap: item.nama_lengkap || "",
@@ -130,111 +129,192 @@ function AdminDashboard() {
       dusun: item.dusun || "",
       pendidikan: item.pendidikan || "",
     });
-    // Scroll ke atas (ke form)
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  // ✅ FUNGSI DOWNLOAD EXCEL
+  const handleDownloadExcel = () => {
+    if (penduduk.length === 0) {
+      alert("Tidak ada data untuk diunduh!");
+      return;
+    }
+
+    // Format data untuk Excel
+    const dataForExcel = penduduk.map((item, index) => ({
+      "No": index + 1,
+      "NIK": item.nik,
+      "Nama Lengkap": item.nama_lengkap,
+      "Tempat Lahir": item.tempat_lahir,
+      "Tanggal Lahir": item.tanggal_lahir,
+      "Jenis Kelamin": item.jenis_kelamin,
+      "Agama": item.agama,
+      "Status Perkawinan": item.status_perkawinan,
+      "Dusun": item.dusun,
+      "Pendidikan": item.pendidikan,
+    }));
+
+    // Buat worksheet dan workbook
+    const worksheet = XLSX.utils.json_to_sheet(dataForExcel);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Data Penduduk");
+
+    // Set column widths
+    worksheet['!cols'] = [
+      { wch: 5 },  // No
+      { wch: 18 }, // NIK
+      { wch: 25 }, // Nama
+      { wch: 15 }, // Tempat Lahir
+      { wch: 15 }, // Tanggal Lahir
+      { wch: 15 }, // JK
+      { wch: 12 }, // Agama
+      { wch: 18 }, // Status
+      { wch: 15 }, // Dusun
+      { wch: 18 }, // Pendidikan
+    ];
+
+    // Download file
+    const fileName = `Data_Penduduk_${new Date().toISOString().split('T')[0]}.xlsx`;
+    XLSX.writeFile(workbook, fileName);
+  };
+
   return (
-    <div className="p-8 min-h-screen bg-gray-100">
-      <h1 className="text-3xl font-bold text-gray-800 mb-8 items-center gap-2">Dashboard Admin Penduduk 🏘️</h1>
+    <div className="min-h-screen">
+      {/* Header dengan Statistik */}
+      <div className="mb-8">
+        <div className="bg-white/10 backdrop-blur-xl rounded-2xl p-6 border border-white/20 shadow-2xl">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl">
+                <Users className="w-8 h-8 text-white" />
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold text-white">Data Penduduk</h1>
+                <p className="text-blue-200 text-sm">Kelola data penduduk Desa Sidoarum</p>
+              </div>
+            </div>
+            <div className="text-right">
+              <p className="text-5xl font-bold text-white">{penduduk.length}</p>
+              <p className="text-blue-200 text-sm">Total Penduduk</p>
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* Notifikasi Error */}
       {error && (
-        <div className="mb-6 p-4 bg-red-100 text-red-800 rounded-lg border border-red-200 text-sm font-medium flex items-start gap-2">
+        <div className="mb-6 p-4 bg-red-50 text-red-800 rounded-xl border border-red-200 text-sm font-medium flex items-start gap-2 animate-shake">
           <XCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
-          <p>**Error:** {error}. Harap cek RLS Supabase, izin tabel, atau koneksi Anda.</p>
+          <p><strong>Error:</strong> {error}</p>
         </div>
       )}
 
-      {/* 1. Form Tambah/Edit Data (Card) */}
-      <div className="bg-white p-6 rounded-xl shadow-lg mb-8">
-        <h2 className="text-xl font-semibold text-gray-700 border-b pb-3 mb-4 flex items-center gap-2">
-          {isEditing ? <Edit size={20} className="text-yellow-500" /> : <Plus size={20} className="text-blue-500" />}
+      {/* Form Tambah/Edit Data */}
+      <div className="bg-white/10 backdrop-blur-xl rounded-2xl p-6 border border-white/20 shadow-2xl mb-8">
+        <h2 className="text-xl font-semibold text-white border-b border-white/20 pb-3 mb-4 flex items-center gap-2">
+          {isEditing ? <Edit size={20} className="text-yellow-400" /> : <Plus size={20} className="text-blue-400" />}
           {isEditing ? `Edit Data: ${currentData?.nama_lengkap}` : "Tambah Data Penduduk Baru"}
         </h2>
 
-        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {/* Input NIK (Read-only saat Edit) */}
+        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <input
             name="nik"
             value={formInput.nik}
             onChange={handleInputChange}
-            placeholder="NIK (Nomor Induk Kependudukan)"
+            placeholder="NIK"
             required
-            className={`p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 transition-all ${isEditing ? "bg-gray-200 cursor-not-allowed" : "bg-white border-gray-300"}`}
+            className={`p-3 border-2 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all ${
+              isEditing ? "bg-gray-200 cursor-not-allowed border-gray-300" : "bg-white/90 border-white/30"
+            }`}
             readOnly={isEditing}
-            title={isEditing ? "NIK tidak dapat diubah saat mode Edit" : "NIK"}
             disabled={loading}
           />
 
-          {/* Input Nama Lengkap */}
           <input
             name="nama_lengkap"
             value={formInput.nama_lengkap}
             onChange={handleInputChange}
             placeholder="Nama Lengkap"
             required
-            className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 transition-all"
+            className="p-3 border-2 border-white/30 bg-white/90 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
             disabled={loading}
           />
 
-          {/* Input Tempat Lahir */}
           <input
             name="tempat_lahir"
             value={formInput.tempat_lahir}
             onChange={handleInputChange}
             placeholder="Tempat Lahir"
-            className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 transition-all"
+            className="p-3 border-2 border-white/30 bg-white/90 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
             disabled={loading}
           />
 
-          {/* Input Tanggal Lahir (Gunakan type="date" jika ingin input tanggal) */}
           <input
             name="tanggal_lahir"
             value={formInput.tanggal_lahir}
             onChange={handleInputChange}
-            placeholder="Tgl Lahir (YYYY-MM-DD)"
+            placeholder="Tanggal Lahir"
             type="date"
-            className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 transition-all"
+            className="p-3 border-2 border-white/30 bg-white/90 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
             disabled={loading}
           />
 
-          {/* Input Jenis Kelamin, Agama, Status Kawin, Dusun, Pendidikan */}
-          {/* Ini lebih baik menggunakan <select> untuk konsistensi data */}
-          <select name="jenis_kelamin" value={formInput.jenis_kelamin} onChange={handleInputChange} className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 transition-all" disabled={loading}>
+          <select 
+            name="jenis_kelamin" 
+            value={formInput.jenis_kelamin} 
+            onChange={handleInputChange} 
+            className="p-3 border-2 border-white/30 bg-white/90 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all" 
+            disabled={loading}
+          >
             <option value="">-- Jenis Kelamin --</option>
             <option value="Laki-laki">Laki-laki</option>
             <option value="Perempuan">Perempuan</option>
           </select>
 
-          <input name="agama" value={formInput.agama} onChange={handleInputChange} placeholder="Agama" className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 transition-all" disabled={loading} />
+          <input 
+            name="agama" 
+            value={formInput.agama} 
+            onChange={handleInputChange} 
+            placeholder="Agama" 
+            className="p-3 border-2 border-white/30 bg-white/90 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all" 
+            disabled={loading} 
+          />
 
           <input
             name="status_perkawinan"
             value={formInput.status_perkawinan}
             onChange={handleInputChange}
             placeholder="Status Perkawinan"
-            className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 transition-all"
+            className="p-3 border-2 border-white/30 bg-white/90 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
             disabled={loading}
           />
 
-          <input name="dusun" value={formInput.dusun} onChange={handleInputChange} placeholder="Dusun" className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 transition-all" disabled={loading} />
+          <input 
+            name="dusun" 
+            value={formInput.dusun} 
+            onChange={handleInputChange} 
+            placeholder="Dusun" 
+            className="p-3 border-2 border-white/30 bg-white/90 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all" 
+            disabled={loading} 
+          />
 
           <input
             name="pendidikan"
             value={formInput.pendidikan}
             onChange={handleInputChange}
             placeholder="Pendidikan Terakhir"
-            className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 transition-all"
+            className="p-3 border-2 border-white/30 bg-white/90 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
             disabled={loading}
           />
 
-          {/* Buttons */}
-          <div className="lg:col-span-4 flex gap-3 mt-4">
+          <div className="lg:col-span-3 flex gap-3 mt-4">
             <button
               type="submit"
               disabled={loading}
-              className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-colors shadow-md disabled:opacity-50 ${isEditing ? "bg-yellow-500 hover:bg-yellow-600 text-white" : "bg-blue-600 hover:bg-blue-700 text-white"}`}
+              className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all shadow-lg disabled:opacity-50 ${
+                isEditing 
+                  ? "bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white shadow-yellow-500/30" 
+                  : "bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-blue-500/30"
+              }`}
             >
               {loading ? (
                 <>
@@ -252,7 +332,11 @@ function AdminDashboard() {
             </button>
 
             {isEditing && (
-              <button type="button" onClick={resetForm} className="flex items-center gap-2 px-6 py-3 bg-gray-500 hover:bg-gray-600 text-white rounded-xl font-bold transition-colors shadow-md disabled:opacity-50">
+              <button 
+                type="button" 
+                onClick={resetForm} 
+                className="flex items-center gap-2 px-6 py-3 bg-gray-500 hover:bg-gray-600 text-white rounded-xl font-bold transition-all shadow-lg"
+              >
                 Batal Edit
               </button>
             )}
@@ -260,50 +344,68 @@ function AdminDashboard() {
         </form>
       </div>
 
-      {/* 2. Tabel Tampilan Data (Card) */}
-      <div className="bg-white p-6 rounded-xl shadow-lg">
-        <h2 className="text-xl font-semibold text-gray-700 border-b pb-3 mb-4">
-          Data Penduduk Aktif <span className="font-normal text-sm text-gray-500">({penduduk.length} total)</span>
-        </h2>
+      {/* Tabel Data */}
+      <div className="bg-white/10 backdrop-blur-xl rounded-2xl p-6 border border-white/20 shadow-2xl">
+        <div className="flex items-center justify-between mb-4 border-b border-white/20 pb-3">
+          <h2 className="text-xl font-semibold text-white">
+            Data Penduduk Aktif <span className="font-normal text-sm text-blue-200">({penduduk.length} total)</span>
+          </h2>
+          
+          {/* ✅ TOMBOL DOWNLOAD EXCEL */}
+          <button
+            onClick={handleDownloadExcel}
+            disabled={loading || penduduk.length === 0}
+            className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-green-600 to-green-500 hover:from-green-700 hover:to-green-600 text-white rounded-xl font-bold transition-all shadow-lg shadow-green-500/30 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Download size={18} />
+            Download Excel
+          </button>
+        </div>
 
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider rounded-tl-lg">NIK</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama Lengkap</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">JK</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dusun</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pendidikan</th>
-                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider rounded-tr-lg">Aksi</th>
+          <table className="min-w-full">
+            <thead>
+              <tr className="border-b border-white/20">
+                <th className="px-4 py-3 text-left text-xs font-semibold text-blue-200 uppercase tracking-wider">NIK</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-blue-200 uppercase tracking-wider">Nama Lengkap</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-blue-200 uppercase tracking-wider">JK</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-blue-200 uppercase tracking-wider">Dusun</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-blue-200 uppercase tracking-wider">Pendidikan</th>
+                <th className="px-4 py-3 text-center text-xs font-semibold text-blue-200 uppercase tracking-wider">Aksi</th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan="6" className="text-center p-6 text-gray-500">
+                  <td colSpan="6" className="text-center p-6 text-white">
                     <Loader2 className="animate-spin inline-block mr-2" size={20} /> Memuat data...
                   </td>
                 </tr>
               ) : penduduk.length === 0 ? (
                 <tr>
-                  <td colSpan="6" className="text-center p-6 text-gray-500">
+                  <td colSpan="6" className="text-center p-6 text-white">
                     Tidak ada data penduduk yang ditemukan.
                   </td>
                 </tr>
               ) : (
                 penduduk.map((item) => (
-                  <tr key={item.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-4 py-3 whitespace-nowrap text-sm font-mono text-gray-900">{item.nik}</td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-800">{item.nama_lengkap}</td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">{item.jenis_kelamin}</td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">{item.dusun}</td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">{item.pendidikan}</td>
+                  <tr key={item.id} className="border-b border-white/10 hover:bg-white/5 transition-colors">
+                    <td className="px-4 py-3 whitespace-nowrap text-sm font-mono text-white">{item.nik}</td>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-white">{item.nama_lengkap}</td>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-blue-200">{item.jenis_kelamin}</td>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-blue-200">{item.dusun}</td>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-blue-200">{item.pendidikan}</td>
                     <td className="px-4 py-3 whitespace-nowrap text-center">
-                      <button onClick={() => handleEditClick(item)} className="text-yellow-600 hover:text-yellow-800 p-2 rounded-full hover:bg-yellow-50 transition-colors">
+                      <button 
+                        onClick={() => handleEditClick(item)} 
+                        className="text-yellow-400 hover:text-yellow-300 p-2 rounded-lg hover:bg-yellow-500/10 transition-colors"
+                      >
                         <Edit size={18} />
                       </button>
-                      <button onClick={() => handleDelete(item.id)} className="text-red-600 hover:text-red-800 p-2 rounded-full hover:bg-red-50 transition-colors ml-2">
+                      <button 
+                        onClick={() => handleDelete(item.id)} 
+                        className="text-red-400 hover:text-red-300 p-2 rounded-lg hover:bg-red-500/10 transition-colors ml-2"
+                      >
                         <Trash size={18} />
                       </button>
                     </td>
@@ -314,6 +416,17 @@ function AdminDashboard() {
           </table>
         </div>
       </div>
+
+      <style>{`
+        @keyframes shake {
+          0%, 100% { transform: translateX(0); }
+          10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
+          20%, 40%, 60%, 80% { transform: translateX(4px); }
+        }
+        .animate-shake {
+          animation: shake 0.5s ease-in-out;
+        }
+      `}</style>
     </div>
   );
 }
