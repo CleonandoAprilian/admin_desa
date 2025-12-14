@@ -13,7 +13,7 @@ function AdminDashboard() {
   // State untuk Form Input
   const [formInput, setFormInput] = useState({
     nik: "",
-    no_kk: "", // ✅ TAMBAHAN: Nomor Kartu Keluarga
+    no_kk: "",
     nama_lengkap: "",
     tempat_lahir: "",
     tanggal_lahir: "",
