@@ -185,8 +185,7 @@ function AdminDashboard() {
     worksheet["!cols"] = [
       { wch: 5 }, // No
       { wch: 18 }, // NIK
-      { wch: 18 }, // ✅ NoKK
-      { wch: 25 }, // Nama
+      { wch: 20 }, // Nama
       { wch: 15 }, // Tempat Lahir
       { wch: 15 }, // Tanggal Lahir
       { wch: 15 }, // JK
@@ -397,29 +396,26 @@ function AdminDashboard() {
           <table className="min-w-full">
             <thead>
               <tr className="border-b border-white/20">
-                <th className="px-4 py-3 text-left text-xs font-semibold text-blue-200 uppercase tracking-wider">NIK</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-blue-200 uppercase tracking-wider">No. KK</th> {/* ✅ TAMBAHAN: Kolom KK */}
-                <th className="px-4 py-3 text-left text-xs font-semibold text-blue-200 uppercase tracking-wider">Nama Lengkap</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-blue-200 uppercase tracking-wider">JK</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-blue-200 uppercase tracking-wider">Dusun</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-blue-200 uppercase tracking-wider">Pendidikan</th>
+                <th className="px-4 py-3 text-center text-xs font-semibold text-blue-200 uppercase tracking-wider">NIK</th>
+                <th className="px-4 py-3 text-center text-xs font-semibold text-blue-200 uppercase tracking-wider">Nama Lengkap</th>
+                <th className="px-4 py-3 text-center text-xs font-semibold text-blue-200 uppercase tracking-wider">JK</th>
+                <th className="px-4 py-3 text-center text-xs font-semibold text-blue-200 uppercase tracking-wider">Dusun</th>
+                <th className="px-4 py-3 text-center text-xs font-semibold text-blue-200 uppercase tracking-wider">Pendidikan</th>
                 <th className="px-4 py-3 text-center text-xs font-semibold text-blue-200 uppercase tracking-wider">Aksi</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan="7" className="text-center p-6 text-white">
+                  <td colSpan="6" className="text-center p-6 text-white">
                     {" "}
-                    {/* colSpan diubah dari 6 ke 7 */}
                     <Loader2 className="animate-spin inline-block mr-2" size={20} /> Memuat data...
                   </td>
                 </tr>
               ) : penduduk.length === 0 ? (
                 <tr>
-                  <td colSpan="7" className="text-center p-6 text-white">
+                  <td colSpan="6" className="text-center p-6 text-white">
                     {" "}
-                    {/* colSpan diubah dari 6 ke 7 */}
                     Tidak ada data penduduk yang ditemukan.
                   </td>
                 </tr>
@@ -427,7 +423,6 @@ function AdminDashboard() {
                 penduduk.map((item) => (
                   <tr key={item.id} className="border-b border-white/10 hover:bg-white/5 transition-colors">
                     <td className="px-4 py-3 whitespace-nowrap text-sm font-mono text-white">{item.nik}</td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm font-mono text-white">{item.no_kk}</td> {/* ✅ Tampilkan NoKK */}
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-white">{item.nama_lengkap}</td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-blue-200">{item.jenis_kelamin}</td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-blue-200">{item.dusun}</td>
